@@ -11,9 +11,20 @@ app.use(express.json());
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI)
+mongoose.connect(process.env.MONGODB_URI, {
+  serverSelectionTimeoutMS: 30000,
+  socketTimeoutMS: 45000,
+  connectTimeoutMS: 10000,
+  retryWrites: true,
+  w: 'majority'
+})
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.log('MongoDB connection error:', err));
+
+// Handle connection errors after initial connection
+mongoose.connection.on('error', (err) => {
+  console.log('MongoDB connection error:', err);
+});
 
 // Routes
 app.use('/api/auth', require('../routes/authRoutes'));
@@ -28,7 +39,12 @@ app.get('/', (req, res) => {
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'Server is running' });
+  const mongoStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+  res.json({ 
+    status: 'Server is running',
+    mongodb: mongoStatus,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Error handling middleware
