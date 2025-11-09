@@ -21,6 +21,11 @@ app.use('/api/users', require('../routes/userRoutes'));
 app.use('/api/posts', require('../routes/postRoutes'));
 app.use('/api/comments', require('../routes/commentRoutes'));
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({ message: 'Social Media Backend API', status: 'running' });
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'Server is running' });
